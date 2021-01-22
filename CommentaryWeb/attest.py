@@ -37,4 +37,20 @@ def login():
         username = form.username.data
         password = form.password.data
         # 将username作为username查询出密码进行判断
-        db_password = User.query.filter
+        db_user = User.query.filter_by(username=username).first()
+        if db_user is None:
+            error = 'Incorrect username.'
+        elif not check_password_hash(db_user.password, password):
+            error = 'Incorrect password.'
+
+        if error is None:
+            session.clear()
+            session['username'] = db_user.username
+            return redirect(url_for('index'))
+
+        flash(error)
+    return render_template('auth/login.html')
+
+
+
+
