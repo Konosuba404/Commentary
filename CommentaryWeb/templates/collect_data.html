@@ -1,0 +1,266 @@
+{% extends 'background_base.html' %}
+{#{% block title %}
+    地图
+{% endblock %}#}
+{% block content %}
+    <script type="text/javascript" src="https://api.map.baidu.com/api?v=1.0&type=webgl&ak=muDX8phwFCMsGeEagmweAHPr5trGSGYr"></script>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <style type="text/css">
+        html{height: 100%}
+        body{height: 100%;margin: 0;padding: 0}
+        #container{height:90%; width: 70%; float: left}
+        #container_table{width: 30%; float: left; align-content: center}
+        #data_table{
+            width: 100%;
+            border: 1px solid #377ba8;
+            text-align: center;
+        }
+        th{
+            border: 1px solid #377ba8;
+        }
+        td{
+            border: 1px solid #377ba8;
+        }
+    </style>
+    <div id="container"></div>
+    <div id="container_table">
+        <form method="post" style="align-content: center" action="{{ url_for('frontend.data_table') }}">
+            <table id="data_table" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" width="15%">经度</th>
+                        <th scope="col" width="15%">纬度</th>
+                        <th scope="col" width="55%">描述</th>
+                        <th scope="col" width="15%"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <input id="enodata" type="submit" class="btn btn-primary" value="提交到数据库">
+        </form>
+    </div>
+    <script>
+        //百度地图API功能
+        function G(id){
+            return document.getElementById(id);
+        }
+
+        //创建地图实例
+        const map = new BMapGL.Map('container');
+        //创建点坐标
+        const point = new BMapGL.Point(113.271429, 23.134273);
+        //初始化地图，设置中心点坐标和地图级别
+        map.centerAndZoom(point, 12);
+        //开启鼠标滚轮缩放
+        map.enableScrollWheelZoom(true);
+        // 添加比例尺控件
+        const scaleCtrl = new BMapGL.ScaleControl();
+        map.addControl(scaleCtrl);
+        // 添加缩放控件
+        const zoomCtrl = new BMapGL.ZoomControl();
+        map.addControl(zoomCtrl);
+        // 添加城市列表控件
+        const cityCtrl = new BMapGL.CityListControl();
+        map.addControl(cityCtrl);
+
+
+        //定义一个控件类
+        function ZoomControl(){
+            this.defaultAnchor = BMAP_ANCHOR_TOP_LEFT;
+            this.defaultOffset = new BMapGL.Size(100,15);
+        }
+        //通过JavaScript的prototype属性继承于BMap.Control
+        ZoomControl.prototype = new BMapGL.Control();
+        //自定义控件必须实现自己的initialize方法，并且将控件的DOM元素返回
+        //在本方法中创建一个div元素作为控件的容器，并将其添加到地图容器中
+        ZoomControl.prototype.initialize = function (map){
+            // 创建一个DOM元素
+            const div = document.createElement("div");
+            div.innerHTML = '<div id="r-result"><input type="text" id="suggestId" size="20" value=" " style="width:150px;" placeholder="输入地址"/></div><div id="searchResultPanel" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>';
+            // 添加DOM元素到地图中
+            map.getContainer().appendChild(div);
+            // 将DOM元素返回
+            return div;
+        }
+        const myZoomCtrl = new ZoomControl();
+        map.addControl(myZoomCtrl);
+
+
+
+        //创建一个自动完成对象
+        const ac = new BMapGL.Autocomplete(
+            {
+                "input": "suggestId",
+                "location": map
+            }
+        );
+
+        // 鼠标放在下拉列表上的事件
+        ac.addEventListener("onhighlight", function(e) {
+            let str = "";
+            let _value = e.fromitem.value;
+            let value = "";
+            if (e.fromitem.index > -1) {
+                value = _value.province + _value.city + _value.district + _value.street + _value.business;
+            }
+            str = "FromItem<br/>index = " + e.fromitem.index + "<br/>value = " + value;
+
+            value = "";
+            if (e.toitem.index > -1) {
+                _value = e.toitem.value;
+                value = _value.province + _value.city + _value.district + _value.street + _value.business;
+            }
+            str += "<br/>ToItem<br/>index = " + e.toitem.index + "<br/>value = " + value;
+            G("searchResultPanel").innerHTML = str;
+        });
+
+        let myValue;
+        // 鼠标点击下拉列表后的事件
+        ac.addEventListener("onconfirm", function(e) {
+            const _value = e.item.value;
+            myValue = _value.province + _value.city + _value.district + _value.street + _value.business;
+            G("searchResultPanel").innerHTML ="onconfirm<br/>index = " + e.item.index + "<br/>myValue = " + myValue;
+            setPlace();
+        });
+
+        // 清空标记并重新添加标记
+        function setPlace() {
+            map.clearOverlays(); //清除地图上所有覆盖物
+            function myFun() {
+                const pp = local.getResults().getPoi(0).point; //获取第一个智能搜索的结果
+                map.centerAndZoom(pp, 17);
+                map.addOverlay(new BMapGL.Marker(pp)); //添加标注
+            }
+
+            var local = new BMapGL.LocalSearch(map, { //智能搜索
+                onSearchComplete: myFun
+            });
+            local.search(myValue);
+        }
+
+        // 添加单击事件：添加表单、将经纬度获取到表单上
+        map.addEventListener('click', function (e){
+            {#var table = document.getElementById('data_table');
+            table.innerHTML += '<tr>' +
+                '<th><input type="text" id="longitude" width="100%"></th>' +
+                '<th><input type="text" id="latitude" width="100%"></th>' +
+                '<th><input type="text" id="description" width="100%"></th>' +
+                '<th><input type="button" id="clearTh" value="删除" onclick="deleteTr()"></th>' +
+                '</tr>';
+            document.getElementById('longitude').value = e.latlng.lng;
+            document.getElementById('latitude').value = e.latlng.lat;
+            alert('点击位置经纬度：' + e.latlng.lng + ',' + e.latlng.lat);#}
+            alert('点击位置经纬度：' + e.latlng.lng + typeof e.latlng.lng +',' + e.latlng.lat);
+            {#addTh(e.latlng.lng.slice(0,9), e.latlng.lat.slice(0,7));#}
+            // 创建点
+            const marker = new BMapGL.Marker(new BMapGL.Point(e.latlng.lng, e.latlng.lat));
+            // 添加到视图上
+            map.addOverlay(marker);
+            // toFixed() 方法可把 Number 四舍五入为指定小数位数的数字。
+            addTh(e.latlng.lng.toFixed(6), e.latlng.lat.toFixed(5));
+        });
+
+        // 动态添加表格
+        function addTh(lng, lat){
+            // 获取table
+            const table = document.getElementById('data_table');
+            // 创建tr
+            const tr = document.createElement('tr');
+            // 创建第一列，用于存储经度
+            const longitude = document.createElement('td');
+            {#longitude.innerHTML = lng.slice(0,9);#}
+            longitude.innerHTML = lng;
+            // 创建第二列，用于存储纬度
+            const latitude = document.createElement('td');
+            {#latitude.innerHTML = lat.slice(0,7);#}
+            latitude.innerHTML = lat;
+            // 创建第三列，用于存储位置的描述
+            const description = document.createElement('td');
+            const btn_descripition = document.createElement('input');
+            btn_descripition.setAttribute('type', 'text');
+            btn_descripition.setAttribute('style', 'width:100%');
+            btn_descripition.setAttribute('class', 'form-control');
+            // 创建第四列，用于存储删除按钮
+            const clearTh = document.createElement('td');
+            const btn_clearTh = document.createElement('input');
+            btn_clearTh.setAttribute('type', 'button');
+            btn_clearTh.setAttribute('value', '删除');
+            btn_clearTh.setAttribute('class', 'btn btn-danger btn-sm');
+            btn_clearTh.onclick = function () {
+                if (confirm("确定删除？")) {
+                    this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);
+                    {#deleteRow();#}
+                    // 遍历出marker
+                    // 将marker的经度纬度与文本框中的进行匹配相等再删除
+                    const allOverlay = map.getOverlays();
+                    for (let i = 0; i < allOverlay.length; ++i){
+                        if(allOverlay[i].getPosition().lng.toFixed(6) === lng && allOverlay[i].getPosition().lat.toFixed(5) === lat){
+                            map.removeOverlay(allOverlay[i]);
+                        }
+                    }
+                }
+            }
+
+            table.appendChild(tr);
+            tr.appendChild(longitude);
+            tr.appendChild(latitude);
+
+            tr.appendChild(description);
+            description.appendChild(btn_descripition);
+            tr.appendChild(clearTh);
+            clearTh.appendChild(btn_clearTh);
+        }
+
+        // JQuery Ajax前后端交互
+        $(document).ready(function () {
+            $("#enodata").click(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ url_for('frontend.insert_data') }}",
+                    data: JSON.stringify(getTableData()),
+                    contentType: 'application/json; charset=UTF-8',
+                    dataType: 'json',
+
+                    success: function (data){
+                        console.log(data);
+                    },
+                    error: function (msg){
+                        console.log("error:", msg)
+                    }
+                })
+            })
+        })
+
+
+        // 遍历表格中的值,并生成Json数据
+        function getTableData(){
+            const table = document.getElementById('data_table');
+            const rows = table.rows
+            const jsonb = [];
+            {#console.log(table.innerText);
+            alert(table.rows.length + "->" + table.rows[0].cells.length)#}
+            // 通过rows[i].cells[j].innerHTML遍历出每个表格中的值
+            // 通过rows[i].cells[j].getElementsByTagName("input")[0].value 获取出input的值
+            for (let i = 1; i < rows.length; ++i){
+                const row = {};
+                for (let j = 0; j < rows[i-1].cells.length-1; ++j){
+                    if (j === 0){
+                        row["longitude"] = rows[i].cells[j].innerHTML;
+                    } else if (j === 1){
+                        row["latitude"] = rows[i].cells[j].innerHTML;
+                    } else if (j === 2){
+                        row["description"] = rows[i].cells[j].getElementsByTagName("input")[0].value;
+                    }
+                }
+                jsonb.push(row);
+            }
+            {#console.trace();#}
+            return jsonb;
+            // console DEBUG
+            {#window.location.href=window.location.href;
+            window.location.reload;#}
+        }
+
+    </script>
+{% endblock %}

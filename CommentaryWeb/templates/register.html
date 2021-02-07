@@ -1,10 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>register</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block header %}
+    <h1>{% block title %}Register{% endblock %}</h1>
+{% endblock %}
 
-</body>
-</html>
+{% block content %}
+    <form method="post">
+        {{ form.csrf_token }}
+        {{ form.username.label }}
+        {{ form.username }}
+        {% for message in form.username.errors %}
+            <small class="error">{{ message }}</small><br>
+        {% endfor %}
+        {{ form.password.label }}
+        {{ form.password }}
+        {% for message in form.password.errors %}
+            <small class="error">{{ message }}</small><br>
+        {% endfor %}
+        {{ form.RePassword.label }}
+        {{ form.RePassword }}
+        {% for message in form.RePassword.errors %}
+            <small class="error">{{ message }}</small><br>
+        {% endfor %}
+        {{ wtf.form_field(form.submit) }}
+    </form>
+{% endblock %}

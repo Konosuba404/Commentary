@@ -1,8 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-from app import create_app
-
-# 先获取app的db对象
-db = SQLAlchemy(create_app(), use_native_unicode='utf8')
+from app import db
 
 
 # Address类对应Address数据库
@@ -10,7 +6,7 @@ class Address(db.Model):
     # 声明表名
     __tablename__ = 'Address'
     # 表的结构
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
     longitude = db.Column(db.Float)
     latitude = db.Column(db.Float)
     description = db.Column(db.Text)
@@ -27,7 +23,7 @@ class User(db.Model):
     __tablename__ = 'User'
     # 表的结构
     username = db.Column(db.String(20), primary_key=True)
-    password = db.Column(db.String(10))
+    password = db.Column(db.String(255))
 
     def __init__(self, username, password):
         self.username = username

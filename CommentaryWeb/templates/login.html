@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block header %}
+    <h1>{% block title %}Login{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        {{ form.csrf_token }}
+        {{ form.username.label }}
+        {{ form.username }}
+        {% for message in form.username.errors %}
+            <small class="error">{{ message }}</small><br>
+        {% endfor %}
+        {{ form.password.label }}
+        {{ form.password }}
+        {% for message in form.password.errors %}
+            <small class="error">{{ message }}</small><br>
+        {% endfor %}
+        {{ form.submit }}
+    </form>
+{% endblock %}

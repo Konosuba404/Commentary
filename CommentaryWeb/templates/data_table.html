@@ -1,0 +1,61 @@
+{% extends 'background_base.html' %}
+{% block content %}
+{#    <meta http-equiv="refresh" content="1">#}
+    <div>
+        <table id="show_data" class="table table-hover">
+            <thead>
+                <tr>
+                    <th>经度</th>
+                    <th>纬度</th>
+                    <th>描述</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            {% for i in data %}
+                <tr>
+                    <td>{{ i.longitude }}</td>
+                    <td>{{ i.latitude }}</td>
+                    <td>{{ i.description }}</td>
+                    {# 利用jinja的loop.index（从1开始） 即循环迭代计数 记录当前的行数，将行数传到函数中 #}
+{#                    <td><input type="button" name="delete_item" value="删除" class="btn btn-danger btn-sm" onclick="delete_row({{ loop.index }})"></td>#}
+                    <td><input type="button" name="delete_item" value="删除" class="btn btn-danger btn-sm" onclick="delete_row({{ loop.index }})"></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <script>
+        function delete_row(i) {
+            if (confirm("确定删除？")){
+                {#const lng = this.parentNode.parentNode.children[0];#}
+                {#const lat = this.parentNode.parentNode.children[1];#}
+                {#console.log(lng+"->"+lat);#}
+                {#console.log(this.parentElement);#}
+                {#this.parentElement.parentNode.parentNode.removeChild(this.parentNode.parentNode);#}
+                {#const table = document.getElementById("show_data");
+                console.log(table.rows.length+'->'+table.rows[0].cells.length);
+                console.log(this);
+#}              console.log(document.getElementsByName("delete_item")[i-1].parentNode);
+                const lng = document.getElementsByName("delete_item")[i-1].parentNode.parentNode.children[0].innerHTML;
+                const lat = document.getElementsByName("delete_item")[i-1].parentNode.parentNode.children[1].innerHTML;
+                console.log(lng+"->"+lat);
+                const jsonb = {"longitude":lng, "latitude":lat};
+                ajax(jsonb);
+                document.getElementsByName("delete_item")[i-1].parentNode.parentNode.parentNode.removeChild(document.getElementsByName("delete_item")[i-1].parentNode.parentNode);
+            }
+        }
+        function ajax(obj){
+            const xhtml = new XMLHttpRequest();
+            xhtml.open('POST', '{{ url_for('frontend.delete_data') }}', true);
+            xhtml.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+            xhtml.setRequestHeader("If-Modified-Since","0");
+            xhtml.setRequestHeader("Cache-Control","no-cache");
+            xhtml.send(JSON.stringify(obj));
+            xhtml.onreadystatechange = function () {
+                if (xhtml.readyState === 4 && xhtml.status === 200){
+                    const json = xhtml.responseText;
+                    console.log(json);
+                }
+            }
+        }
+    </script>
+{% endblock %}
