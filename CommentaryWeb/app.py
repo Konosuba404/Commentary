@@ -28,9 +28,11 @@ def create_app():
     import attest
     # import background
     import frontend
+    import networkresponse
     app.register_blueprint(attest.bp)
     # app.register_blueprint(background.bp)
     app.register_blueprint(frontend.bp)
+    app.register_blueprint(networkresponse.bp)
     return app
 
 
