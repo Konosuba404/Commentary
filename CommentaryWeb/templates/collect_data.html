@@ -30,8 +30,9 @@
                     <tr>
                         <th scope="col" width="15%">经度</th>
                         <th scope="col" width="15%">纬度</th>
-                        <th scope="col" width="55%">描述</th>
-                        <th scope="col" width="15%"></th>
+                        <th scope="col" width="25%">地址</th>
+                        <th scope="col" width="35%">描述</th>
+                        <th scope="col" width="10%"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -157,12 +158,28 @@
             const marker = new BMapGL.Marker(new BMapGL.Point(e.latlng.lng, e.latlng.lat));
             // 添加到视图上
             map.addOverlay(marker);
+            {#var address = geoLocation(e)#}
             // toFixed() 方法可把 Number 四舍五入为指定小数位数的数字。
-            addTh(e.latlng.lng.toFixed(6), e.latlng.lat.toFixed(5));
+            addTh(e.latlng.lng.toFixed(6), e.latlng.lat.toFixed(6));
         });
 
+        {#// 地址逆向解析
+        function geoLocation(e){
+            var geoc = new BMapGL.Geocoder();
+            let temp = null;
+            geoc.getLocation(e.latlng, function (result){
+                 #}{#var addComp = rs.addressComponents;
+                 return addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber;
+                temp = rs.addressComponents;
+                return temp;
+                temp = addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber;#}{#
+                alert(result.address)
+            });
+            return temp;
+        }#}
+
         // 动态添加表格
-        function addTh(lng, lat){
+        function addTh(lng, lat, addr){
             // 获取table
             const table = document.getElementById('data_table');
             // 创建tr
@@ -175,13 +192,22 @@
             const latitude = document.createElement('td');
             {#latitude.innerHTML = lat.slice(0,7);#}
             latitude.innerHTML = lat;
-            // 创建第三列，用于存储位置的描述
+
+            // 创建第三列，用于存储地址的描述
+            const address = document.createElement('td');
+            const btn_address = document.createElement('input');
+            btn_address.setAttribute('type', 'text');
+            btn_address.setAttribute('style', 'width:100%');
+            btn_address.setAttribute('class', 'form-control');
+            {#address.innerHTML = addr;#}
+
+            // 创建第四列，用于存储位置的描述
             const description = document.createElement('td');
             const btn_descripition = document.createElement('input');
             btn_descripition.setAttribute('type', 'text');
             btn_descripition.setAttribute('style', 'width:100%');
             btn_descripition.setAttribute('class', 'form-control');
-            // 创建第四列，用于存储删除按钮
+            // 创建第五列，用于存储删除按钮
             const clearTh = document.createElement('td');
             const btn_clearTh = document.createElement('input');
             btn_clearTh.setAttribute('type', 'button');
@@ -195,7 +221,7 @@
                     // 将marker的经度纬度与文本框中的进行匹配相等再删除
                     const allOverlay = map.getOverlays();
                     for (let i = 0; i < allOverlay.length; ++i){
-                        if(allOverlay[i].getPosition().lng.toFixed(6) === lng && allOverlay[i].getPosition().lat.toFixed(5) === lat){
+                        if(allOverlay[i].getPosition().lng.toFixed(6) === lng && allOverlay[i].getPosition().lat.toFixed(6) === lat){
                             map.removeOverlay(allOverlay[i]);
                         }
                     }
@@ -206,6 +232,8 @@
             tr.appendChild(longitude);
             tr.appendChild(latitude);
 
+            tr.appendChild(address);
+            address.appendChild(btn_address);
             tr.appendChild(description);
             description.appendChild(btn_descripition);
             tr.appendChild(clearTh);
@@ -250,6 +278,8 @@
                     } else if (j === 1){
                         row["latitude"] = rows[i].cells[j].innerHTML;
                     } else if (j === 2){
+                        row["address"] = rows[i].cells[j].getElementsByTagName("input")[0].value;
+                    } else if (j === 3){
                         row["description"] = rows[i].cells[j].getElementsByTagName("input")[0].value;
                     }
                 }

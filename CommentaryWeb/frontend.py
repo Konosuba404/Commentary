@@ -1,7 +1,4 @@
-import json
-
 from flask import Blueprint, redirect, url_for, render_template, request
-from sqlalchemy import and_
 
 from app import nav, db
 from flask_nav.elements import Navbar, View, Link
@@ -13,8 +10,8 @@ bp = Blueprint('frontend', __name__, url_prefix='/frontend')
 # 为导航栏注册组件
 nav.register_element('top', Navbar(
     View(u'地图', 'frontend.collect_data'),
-    View(u'数据表', 'frontend.data_table'),
-    Link(u'退出登录', 'frontend.logout_from_this')
+    Link(u'数据表', 'data_table'),
+    Link(u'退出登录', 'logout_from_this')
 ))
 
 
@@ -34,8 +31,9 @@ def insert_data():
         for i in data:
             lng = i['longitude']
             lat = i['latitude']
+            addr = i['address']
             description = i['description']
-            address = Address(longitude=lng, latitude=lat, description=description)
+            address = Address(longitude=lng, latitude=lat, address=addr, description=description)
             db.session.add(address)
         db.session.commit()
         print("插入成功")

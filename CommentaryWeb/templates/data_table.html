@@ -7,6 +7,7 @@
                 <tr>
                     <th>经度</th>
                     <th>纬度</th>
+                    <th>地址</th>
                     <th>描述</th>
                     <th>操作</th>
                 </tr>
@@ -15,6 +16,7 @@
                 <tr>
                     <td>{{ i.longitude }}</td>
                     <td>{{ i.latitude }}</td>
+                    <td>{{ i.address }}</td>
                     <td>{{ i.description }}</td>
                     {# 利用jinja的loop.index（从1开始） 即循环迭代计数 记录当前的行数，将行数传到函数中 #}
 {#                    <td><input type="button" name="delete_item" value="删除" class="btn btn-danger btn-sm" onclick="delete_row({{ loop.index }})"></td>#}

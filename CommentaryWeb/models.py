@@ -9,11 +9,13 @@ class Address(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
     longitude = db.Column(db.Float)
     latitude = db.Column(db.Float)
+    address = db.Column(db.Text)
     description = db.Column(db.Text)
 
-    def __init__(self, longitude, latitude, description):
+    def __init__(self, longitude, latitude, address, description):
         self.longitude = longitude
         self.latitude = latitude
+        self.address = address
         self.description = description
 
 
