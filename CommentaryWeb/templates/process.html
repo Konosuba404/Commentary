@@ -1,12 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    <h1>Test value</h1>
-    <h3>{{ jsonString }}</h3>
+<script>data=[]</script>
+{% for item in dataFromDatabase %}
+    <script>
+        data.push({{ item }})
+    </script>
+{% endfor %}
+<script>
+    let dis;
+    let lng = {{ jsonString['Longitude'] }};
+    let lat = {{ jsonString['Latitude'] }};
+    let point1 = new BMap.Point(lng, lat);
+    for(let i = 0; i < data.length; ++i){
+        let db_lng = data[i].get('lng');
+        let db_lat = data[i].get('lat');
+        let point2 = new BMap.Point(db_lng, db_lat);
+        {#if (map.getDistance(point1, point2)){
 
-</body>
-</html>
+        }#}
+        dis = map.getDistance(point1, point2)
+    }
+    // JQuery Ajax前后端交互
+    $(document).ready(function () {
+        $.ajax({
+            type: 'POST',
+            url: "{{ url_for('network.process') }}",
+            data: JSON.stringify({"距离":dis}),
+            contentType: 'application/json; charset=UTF-8',
+            dataType: 'json',
+
+            success: function (data){
+                console.log(data);
+            },
+            error: function (msg){
+                console.log("error:", msg)
+            }
+        })
+    })
+</script>
