@@ -12,6 +12,7 @@
         android:layout_height="match_parent"
         android:clickable="true"/>
 
-    <include layout="@layout/menu_buttom"/>
+    <include layout="@layout/menu_buttom"
+        android:id="@+id/includeXml"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

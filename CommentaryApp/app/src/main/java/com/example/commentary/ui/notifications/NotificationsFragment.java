@@ -7,80 +7,65 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.commentary.MainActivity;
-import com.example.commentary.R;
+import com.example.commentary.databinding.FragmentNotificationsBinding;
 import com.example.commentary.sqlDB.MyLoginis;
+import com.example.commentary.utils.CustomAdapter;
 
 import static android.content.Context.MODE_PRIVATE;
 
 
 public class NotificationsFragment extends Fragment {
 
-    View view;
-    ImageButton imageButton;
-    TextView login;
-    TextView myStatus;
-    Button user, update, call, back, exit;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
-
+    FragmentNotificationsBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        /*notificationsViewModel =
-                new ViewModelProvider(this).get(NotificationsViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_notifications, container, false);
-        final TextView textView = root.findViewById(R.id.text_notifications);
-        notificationsViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
-            }
-        });*/
-        view = inflater.inflate(R.layout.fragment_notifications, container, false);
+        binding = FragmentNotificationsBinding.inflate(inflater, container, false);
         initView();
-        /*if(preferences.getBoolean("statue",false)){
-            Intent intent=new Intent(getActivity(), MainActivity.class);
-            startActivity(intent);
-            getActivity().finish();
-        }else{
-            initView();
-        }*/
-        return view;
+        return binding.getRoot();
     }
 
     @SuppressLint("CommitPrefEdits")
     private void initView() {
-        imageButton = view.findViewById(R.id.imageButton);
-        login = view.findViewById(R.id.login);
-        myStatus = view.findViewById(R.id.myStatus);
-        user = view.findViewById(R.id.user);
-        update = view.findViewById(R.id.update);
-        call = view.findViewById(R.id.call);
-        back = view.findViewById(R.id.back);
-        exit = view.findViewById(R.id.exit);
         //根据在线情况显示是否在线
-        login.setText(MyLoginis.getUsername());
+        binding.login.setText(MyLoginis.getUsername());
         if (MyLoginis.getStatue()){
-            myStatus.setText("在线");
+            binding.myStatus.setText("在线");
         } else {
-            myStatus.setText("未在线");
+            binding.myStatus.setText("未在线");
         }
-        exit.setOnClickListener((view)->{
+        binding.exit.setOnClickListener((view)->{
             preferences = getActivity().getSharedPreferences("login", MODE_PRIVATE);
             editor = preferences.edit();
             editor.putBoolean("statue", false);
             editor.apply();
             Intent intent = new Intent(getActivity(), MainActivity.class);
             startActivity(intent);
-//            getActivity().finish();
         });
+        //准备数据集
+        String[] dataSet = {"使用说明", "更新日记", "联系我们", "意见反馈"};
+        //初始化recyclerView
+        RecyclerView recyclerView = binding.myRecyclerView;
+        //初始化并注册布局
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        recyclerView.setLayoutManager(layoutManager);
+        //初始化并注册适配器
+        CustomAdapter customAdapter = new CustomAdapter(dataSet);
+        recyclerView.setAdapter(customAdapter);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

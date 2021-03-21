@@ -41,7 +41,7 @@ public class DBUtils {
         ArrayList<HashMap<String, Object>> data_list = new ArrayList<>();
         Connection connection = getConn();
         try{
-            String sql = "select longitude, latitude, address from Address";
+            String sql = "select longitude, latitude, address, description from Address";
             if ( connection != null){
                 PreparedStatement ps = connection.prepareStatement(sql);
 //                java.sql.Statement stmt = connection.createStatement();
@@ -53,6 +53,7 @@ public class DBUtils {
                         data_map.put("lng", rs.getFloat("longitude"));
                         data_map.put("lat", rs.getFloat("latitude"));
                         data_map.put("address", rs.getString("address"));
+                        data_map.put("description", rs.getString("description"));
                         data_list.add(data_map);
                     }
                     Log.i("yingyingying", "getData:数据执行成功 ");

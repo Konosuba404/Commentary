@@ -32,12 +32,6 @@ public class MyLocationListener extends BDAbstractLocationListener {
         if (bdLocation == null || mMapView == null){
             return;
         }
-        /*MyLocationData locData = new MyLocationData.Builder()
-                .accuracy(bdLocation.getRadius())
-                // 此处设置开发者获取到的方向信息，顺时针0-360
-                .direction(bdLocation.getDirection()).latitude(bdLocation.getLatitude())
-                .longitude(bdLocation.getLongitude()).build();
-        mBaiduMap.setMyLocationData(locData);*/
         navigateTo(bdLocation);
     }
 

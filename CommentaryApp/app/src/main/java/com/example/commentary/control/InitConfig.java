@@ -2,7 +2,6 @@ package com.example.commentary.control;
 
 import com.baidu.tts.client.SpeechSynthesizerListener;
 import com.baidu.tts.client.TtsMode;
-//import com.baidu.tts.sample.util.IOfflineResourceConst;
 
 import java.util.Map;
 
@@ -23,13 +22,10 @@ public class InitConfig {
 
     private String secretKey;
 
-//    private String sn;
-
     /**
      * 纯在线或者离在线融合
      */
     private TtsMode ttsMode;
-
 
     /**
      * 初始化的其它参数，用于setParam
@@ -56,18 +52,6 @@ public class InitConfig {
         this.listener = listener;
     }
 
-
-    // 纯离线SDK用
-    /*public InitConfig(String appId, String appKey, String secretKey, String sn, TtsMode ttsMode,
-                      Map<String, String> params, SpeechSynthesizerListener listener) {
-        this(appId, appKey, secretKey, ttsMode, params, listener);
-        this.sn = sn;
-        if (sn != null) {
-            // 纯离线sdk 才有的参数；离在线版本没有
-            params.put(IOfflineResourceConst.PARAM_SN_NAME, sn);
-        }
-    }*/
-
     public SpeechSynthesizerListener getListener() {
         return listener;
     }
@@ -75,7 +59,6 @@ public class InitConfig {
     public Map<String, String> getParams() {
         return params;
     }
-
 
     public String getAppId() {
         return appId;
@@ -93,7 +76,4 @@ public class InitConfig {
         return ttsMode;
     }
 
-//    public String getSn() {
-//        return sn;
-//    }
 }

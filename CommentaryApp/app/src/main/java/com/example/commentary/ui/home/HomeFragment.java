@@ -7,7 +7,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,7 +15,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
 
 
@@ -28,7 +26,6 @@ import androidx.fragment.app.Fragment;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
-import com.baidu.mapapi.map.InfoWindow;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
@@ -36,9 +33,9 @@ import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.example.commentary.Const;
-import com.example.commentary.MainActivity;
 import com.example.commentary.MainActivity2;
 import com.example.commentary.R;
+import com.example.commentary.databinding.FragmentHomeBinding;
 import com.example.commentary.listener.MySensorListener;
 import com.example.commentary.ui.MyDialogFragment;
 import com.example.commentary.utils.BDLocationUtils;
@@ -47,7 +44,6 @@ import com.example.commentary.utils.DBUtils;
 import com.example.commentary.utils.GsonUtils;
 import com.example.commentary.utils.NetworkUtils;
 import com.example.commentary.utils.SensorUtils;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,11 +55,9 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 public class HomeFragment extends Fragment implements View.OnClickListener {
 
 
-    FloatingActionButton menu_button, location_button, speak_button, relocation_button;
     BDLocationUtils bdLocationUtils;
     SensorUtils sensorUtils;
     GsonUtils gsonUtils;
-    View view;
     private MapView mapView = null;
     BaiduMap mBaiduMap;
     ArrayList<HashMap<String, Object>> data_list = new ArrayList<>();
@@ -71,7 +65,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     BDSpeakerUtils bdSpeakerUtils;
     static String RequestSpeaker = "";
     static Bundle bundle;
-//    boolean flag = false;
+    FragmentHomeBinding binding;
 
     //用于接收网络请求云端数据库中的结果
     public static Handler handler = new Handler(){
@@ -83,9 +77,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                 Log.i("yingyingying", "handleMessage: "+ bundle.get("inf").toString());
                 RequestSpeaker = bundle.get("inf").toString();
                 Log.e("yingyingying", "handleMessage: " + RequestSpeaker);
-//                textView.setText(bundle.get("Direction").toString());
-//                textView.setText(bundle.get("inf").toString());
-//                Toast.makeText(this, RequestSpeaker, Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -94,41 +85,25 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     //初始化视图
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.fragment_home, container, false);
-        /*if(preferences.getBoolean("statue",false)){
-            Intent intent=new Intent(getActivity(), MainActivity.class);
-            startActivity(intent);
-            getActivity().finish();
-        }else{
-            initView();
-        }*/
+        binding = FragmentHomeBinding.inflate(inflater, container, false);
         initView();
-        return view;
+        return binding.getRoot();
     }
 
 
     // 初始化控件、工具类、注册感应器
     public void initView(){
         //map实例
-        mapView = view.findViewById(R.id.bmapView);
+        mapView = binding.bmapView;
         mBaiduMap = mapView.getMap();
         mBaiduMap.setMapType(BaiduMap.MAP_TYPE_NORMAL);
         mBaiduMap.setMyLocationEnabled(true);
 
-        //加载RelativeLayout布局
-        menu_button = view.findViewById(R.id.menu_button);
-        //用于请求网络获取到当前对象所面对的景观
-        location_button = view.findViewById(R.id.location_button);
-        //用于请求百度语音
-        speak_button = view.findViewById(R.id.speak_button);
-        //用于重新定位
-        relocation_button = view.findViewById(R.id.relocation_button);
-
         //为按钮添加点击事件
-        menu_button.setOnClickListener(this);
-        location_button.setOnClickListener(this);
-        speak_button.setOnClickListener(this);
-        relocation_button.setOnClickListener(this);
+        binding.includeXml.menuButton.setOnClickListener(this);
+        binding.includeXml.locationButton.setOnClickListener(this);
+        binding.includeXml.speakButton.setOnClickListener(this);
+        binding.includeXml.relocationButton.setOnClickListener(this);
 
         //初始化定位辅助类
         bdLocationUtils = new BDLocationUtils(getActivity(), mapView, mBaiduMap);
@@ -140,12 +115,14 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
         //为marker添加点击事件，即获得它们之间的距离
         mBaiduMap.setOnMarkerClickListener((marker)->{
-
             LatLng now_position = new LatLng(Const.LATITUDE, Const.LONGITUDE);
             LatLng marker_position = marker.getPosition();
-            Log.e("now_position", "initView: " + Const.LATITUDE + "," + Const.LONGITUDE );
-            Log.e("marker", "initView: " + marker_position.toString() );
-            MyDialogFragment myDialogFragment = new MyDialogFragment(now_position, marker_position);
+            Bundle bundle2 = marker.getExtraInfo();
+            String address = (String) bundle2.get("address");
+            String description = (String) bundle2.get("description");
+            /*Log.e("now_position", "initView: " + Const.LATITUDE + "," + Const.LONGITUDE );
+            Log.e("marker", "initView: " + marker_position.toString() );*/
+            MyDialogFragment myDialogFragment = new MyDialogFragment(now_position, marker_position, address, description);
             myDialogFragment.show(getParentFragmentManager(), "dialog");
             return false;
         });
@@ -153,36 +130,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         //初始化感应器辅助类
         sensorUtils = SensorUtils.getInstance(getActivity(), new MySensorListener());
         //注册感应器
-        sensorUtils.register();
+//        sensorUtils.register();
 
         //初始化Gson辅助类
         gsonUtils = new GsonUtils();
 
         //初始化BDSpeakerUtils
         bdSpeakerUtils = new BDSpeakerUtils(getActivity());
-
-        //创建线程，在线程中获取改变的值并输出
-        /*button.setOnClickListener((view)->{
-            new Thread(()->{
-//                while (true){
-                try {
-                    Thread.sleep(1000);
-                    String string = "纬度：" + Const.LATITUDE + "\n经度：" + Const.LONGITUDE + "\n方向：" + Const.DIRECTION;
-                    gsonUtils.createMap("Latitude", String.valueOf(Const.LATITUDE));
-                    gsonUtils.createMap("Longitude", String.valueOf(Const.LONGITUDE));
-                    gsonUtils.createMap("Direction", String.valueOf(Const.DIRECTION));
-                    gsonUtils.createMap("Flag", "1");
-                    Log.i("yingyingyingyingyingying", "initView: " + string);
-                    Log.i("MAP", "initView: " + gsonUtils.map.toString());
-                    new NetworkUtils(gsonUtils.createJsonString(), getActivity()).postRequest();
-                    Log.i("yingyingyingyingyingying", "initView: " + new NetworkUtils(gsonUtils.createJsonString()).toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-        });*/
-
-
     }
 
     //批量生成Marker
@@ -191,7 +145,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
             data_list = DBUtils.getData();
             Log.e("data_list", "batchMarker: "+data_list.toString() + "size:" + data_list.size());
 
-            Log.e("data_list2", "batchMarker: "+data_list.toString() + "size:" + data_list.size());
             //创建OverlayOptions的集合
             List<OverlayOptions> options = new ArrayList<OverlayOptions>();
 
@@ -200,23 +153,16 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
 
             //遍历出数据库中传过来的经纬度，批量生成point和option，并添加到options中
             for (HashMap<String, Object> map_item : data_list){
+                //构建bundle用于存储数据
+                Bundle bundle1 = new Bundle();
+                bundle1.putString("description", (String) map_item.get("description"));
+                bundle1.putString("address", (String) map_item.get("address"));
+
                 LatLng point = new LatLng((Float)map_item.get("lat"), (Float)map_item.get("lng"));
-
-/*                //用来构造InfoWindow的Button
-                Button button = new Button(getActivity().getApplicationContext());
-//                button.setBackgroundResource(R.drawable.popup);
-                button.setText((String)map_item.get("address"));
-//                button.setVisibility(View.INVISIBLE);
-                //构造InfoWindow
-                //point 描述的位置点
-                //-100 InfoWindow相对于point在y轴的偏移量
-                InfoWindow mInfoWindow = new InfoWindow(button, point, -100);
-                mBaiduMap.showInfoWindow(mInfoWindow);*/
-
                 OverlayOptions option = new MarkerOptions()
                         .position(point)
-//                        .infoWindow(mInfoWindow)
-                        .icon(bitmap);
+                        .icon(bitmap)
+                        .extraInfo(bundle1);
                 options.add(option);
             }
             Log.e("options", "batchMarker: "+ options.size());
@@ -227,16 +173,13 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-//        TEXT = ((MainActivity2)context).getInfo();
-        //为引用赋值,向Activity传值实现通知栏功能
-        /*myListener = (MyListener) getActivity();
-        myListener.sendValue(RequestSpeaker);*/
     }
 
     @Override
     public void onResume() {
         super.onResume();
         mapView.onResume();
+        sensorUtils.register();
     }
 
     @Override
@@ -249,7 +192,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onStop() {
         super.onStop();
-        sensorUtils.unregister();
         bdSpeakerUtils.stop();
         bdLocationUtils.stopLocation();
     }
@@ -262,6 +204,12 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         bdLocationUtils.stopLocation();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+
     //点击方法
     @Override
     public void onClick(View v) {
@@ -270,10 +218,10 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
             case R.id.menu_button:
                 Log.e("menu_button", "onClick: 中" );
                 if (FLAG){
-                    view.findViewById(R.id.pathRelative).setVisibility(View.VISIBLE);
+                    binding.includeXml.pathRelative.setVisibility(View.VISIBLE);
                     FLAG = false;
                 }else {
-                    view.findViewById(R.id.pathRelative).setVisibility(View.INVISIBLE);
+                    binding.includeXml.pathRelative.setVisibility(View.INVISIBLE);
                     FLAG = true;
                 }
                 break;
@@ -283,7 +231,6 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                 //创建线程，在线程中获取改变的值并输出
                  new Thread(()->{
                     try {
-                        Thread.sleep(1000);
                         String string = "纬度：" + Const.LATITUDE + "\n经度：" + Const.LONGITUDE + "\n方向：" + Const.DIRECTION;
                         gsonUtils.createMap("Latitude", String.valueOf(Const.LATITUDE));
                         gsonUtils.createMap("Longitude", String.valueOf(Const.LONGITUDE));
@@ -324,12 +271,11 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                             //发送通知请求
                             notificationManager.notify(1, mBuilder);
                         });
+                        bdSpeakerUtils.speak(RequestSpeaker);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }).start();
-                /*myListener = (MyListener) getActivity();
-                myListener.sendValue(RequestSpeaker);*/
                 break;
 
             //用于请求百度语音
@@ -351,9 +297,4 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                 Log.e("悬浮按钮", "onClick: 操作失败");
         }
     }
-
-    /*//向Activity传值
-    public interface MyListener{
-        void sendValue(String value);
-    }*/
 }

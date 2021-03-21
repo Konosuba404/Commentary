@@ -17,11 +17,15 @@ public class MyDialogFragment extends DialogFragment {
 
     private final LatLng now_position;
     private final LatLng marker_position;
+    private final String address;
+    private final String description;
 
 
-    public MyDialogFragment(LatLng now_position, LatLng marker_position){
+    public MyDialogFragment(LatLng now_position, LatLng marker_position, String address, String description){
         this.now_position = now_position;
         this.marker_position = marker_position;
+        this.address = address;
+        this.description = description;
     }
 
     @NonNull
@@ -42,7 +46,7 @@ public class MyDialogFragment extends DialogFragment {
     @SuppressLint("DefaultLocale")
     public String getTwoPointDistance(){
         double temp_location = getDistance(now_position, marker_position);
-        String distance = "当前据您";
+        String distance = address + "据您" + description;
         if(temp_location<500){
             distance = distance+String.format("%6.0f",temp_location)+"米";
         }else{

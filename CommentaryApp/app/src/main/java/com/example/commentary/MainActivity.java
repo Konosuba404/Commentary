@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -21,6 +22,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.example.commentary.databinding.ActivityMainBinding;
 import com.example.commentary.listener.MySensorListener;
 import com.example.commentary.sqlDB.MyDataBaseHelp;
 import com.example.commentary.sqlDB.MyTabOperate;
@@ -37,27 +39,13 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks, View.OnClickListener {
 
-    BDLocationUtils bdLocationUtils;
-    SensorUtils sensorUtils;
-    EditText username;
-    EditText password;
-    Button login;
-    Button register;
-    ProgressBar loading;
     private SQLiteOpenHelper helper = null;
     private MyTabOperate mytab = null;
     String username1,password1,password2;
     SoftReference usernameSoft,password1Soft,password2Soft;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
-
-/*    Handler handler = new Handler(){
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            Result = msg.obj.toString();
-        }
-    };*/
+    ActivityMainBinding binding;
 
     //危险权限列表
     String[] permission = {Manifest.permission.ACCESS_FINE_LOCATION,
@@ -71,10 +59,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        helper=new MyDataBaseHelp(this);
-        preferences=getSharedPreferences("login",MODE_PRIVATE);
-        editor =preferences.edit();
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        helper = new MyDataBaseHelp(this);
+        preferences = getSharedPreferences("login", Context.MODE_PRIVATE);
+        editor = preferences.edit();
         if (EasyPermissions.hasPermissions(this, permission)){
             if(preferences==null){
                 initView();
@@ -96,23 +85,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     * 初始化布局文件
      */
     private void initView(){
-        username = findViewById(R.id.username);
-        password = findViewById(R.id.password);
-        login = findViewById(R.id.login);
-        register = findViewById(R.id.register);
-        loading = findViewById(R.id.loading);
-
         // 为密码框设置监听事件
-        password.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                login.setEnabled(true);
-                register.setEnabled(true);
-            }
+        binding.password.setOnFocusChangeListener((v, hasFocus) -> {
+            binding.login.setEnabled(true);
+            binding.register.setEnabled(true);
         });
         // 为按钮添加点击事件
-        login.setOnClickListener(this);
-        register.setOnClickListener(this);
+        binding.login.setOnClickListener(this);
+        binding.register.setOnClickListener(this);
     }
 
 
@@ -120,26 +100,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.login:
-                loading.setVisibility(View.VISIBLE);
-                /*Thread thread = new Thread(()->{
-                    String request = DBUtils.loginUser(username.getText().toString(), password.getText().toString());
-                    Message msg = Message.obtain();
-                    msg.obj = request;
-                    Looper.prepare();
-                    handler.sendMessage(msg);
-                    Looper.loop();
-                });
-                thread.start();
-                try {
-                    thread.join();
-                    Toast.makeText(this, Result, Toast.LENGTH_SHORT).show();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
+                binding.loading.setVisibility(View.VISIBLE);
                 new Thread(()->{
                     //使用软引用
-                    usernameSoft = new SoftReference(username.getText().toString());
-                    password1Soft = new SoftReference(password.getText().toString());
+                    usernameSoft = new SoftReference(binding.username.getText().toString());
+                    password1Soft = new SoftReference(binding.password.getText().toString());
 
                     //获取软引用中的实例
                     username1 = (String)usernameSoft.get();
@@ -165,10 +130,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             cursor.close();
                             Intent intent=new Intent(MainActivity.this,MainActivity2.class);
                             startActivity(intent);
+                            finish();
                         }else{
                             runOnUiThread(()->{
                                 Toast.makeText(this,"密码错误",Toast.LENGTH_LONG).show();
-                                password.setText("");
+                                binding.password.setText("");
                             });
                         }
                     }else if(cursor.getCount()==0){
@@ -180,25 +146,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }).start();
                 break;
             case R.id.register:
-                /*loading.setVisibility(View.VISIBLE);
-                Thread thread1 = new Thread(()->{
-                    String request = DBUtils.registerUser(username.getText().toString(), password.getText().toString());
-                    Message msg = Message.obtain();
-                    msg.obj = request;
-                    Looper.prepare();
-                    handler.sendMessage(msg);
-                    Looper.loop();
-                });
-                thread1.start();
-                try {
-                    thread1.join();
-                    Toast.makeText(this, Result, Toast.LENGTH_SHORT).show();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
                 new Thread(()->{
                     mytab = new MyTabOperate(helper.getWritableDatabase());
-                    mytab.insert(username.getText().toString(), password.getText().toString());
+                    mytab.insert(binding.username.getText().toString(), binding.password.getText().toString());
                     runOnUiThread(()->{
                         Toast.makeText(this,"注册成功",Toast.LENGTH_LONG).show();
                     });
@@ -216,28 +166,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        //初始化感应器辅助类
-        sensorUtils = SensorUtils.getInstance(this, new MySensorListener());
-        //注册感应器
-        sensorUtils.register();
-    }
-
-    @Override
-    protected void onPause() {
-        sensorUtils.unregister();
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        sensorUtils.unregister();
-        bdLocationUtils.stopLocation();
-        super.onStop();
-    }
-
+    /**
+     * 处理权限
+     * */
     //请求权限成功
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {

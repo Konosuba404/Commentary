@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical">
 
     <LinearLayout
@@ -17,14 +18,18 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/login"
-                android:layout_weight="1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:backgroundTint="@color/white"
                 android:gravity="center"
-                android:textColor="@color/black" />
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                tools:text="你的名字" />
             <TextView
                 android:id="@+id/myStatus"
                 android:layout_weight="1"
@@ -32,52 +37,16 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/white"
                 android:gravity="center"
-                android:text="我的状态"
+                tools:text="我的状态"
                 android:textColor="@color/black" />
         </LinearLayout>
     </LinearLayout>
 
-    <Button
-        android:id="@+id/user"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/myRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="120px"
-        android:text="使用说明                                                                                        >"
-        android:textColor="@color/black"
-        android:layout_marginBottom="5pt"
-        android:gravity="center_vertical"
-        android:backgroundTint="@color/white"
-        android:drawablePadding="30px" />
-    <Button
-        android:id="@+id/update"
-        android:layout_width="match_parent"
-        android:layout_height="120px"
-        android:text="更新日志                                                                                        >"
-        android:textColor="@color/black"
-        android:layout_marginBottom="5pt"
-        android:gravity="center_vertical"
-        android:backgroundTint="@color/white"
-        android:drawablePadding="30px"/>
-    <Button
-        android:id="@+id/call"
-        android:layout_width="match_parent"
-        android:layout_height="120px"
-        android:text="联系我们                                                                                        >"
-        android:textColor="@color/black"
-        android:layout_marginBottom="5pt"
-        android:gravity="center_vertical"
-        android:backgroundTint="@color/white"
-        android:drawablePadding="30px" />
-
-    <Button
-        android:id="@+id/back"
-        android:layout_width="match_parent"
-        android:layout_height="120px"
-        android:text="意见反馈                                                                                        >"
-        android:textColor="@color/black"
-        android:layout_marginBottom="40pt"
-        android:gravity="center_vertical"
-        android:backgroundTint="@color/white"
-        android:drawablePadding="30px" />
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
     <Button
         android:id="@+id/exit"

@@ -1,34 +1,22 @@
 package com.example.commentary.utils;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 
 import com.baidu.tts.chainofresponsibility.logger.LoggerProxy;
 import com.baidu.tts.client.SpeechSynthesizer;
 import com.baidu.tts.client.SpeechSynthesizerListener;
 import com.baidu.tts.client.TtsMode;
 import com.example.commentary.R;
-import com.example.commentary.control.InitConfig;
 import com.example.commentary.listener.UiMessageListener;
 import com.example.commentary.util.Auth;
-import com.example.commentary.util.AutoCheck;
 import com.example.commentary.util.FileUtil;
-import com.example.commentary.util.IOfflineResourceConst;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.example.commentary.util.IOfflineResourceConst.DEFAULT_SDK_TTS_MODE;
-import static com.example.commentary.util.IOfflineResourceConst.PARAM_SN_NAME;
 import static com.example.commentary.util.IOfflineResourceConst.TEXT_MODEL;
 import static com.example.commentary.util.IOfflineResourceConst.VOICE_MALE_MODEL;
 
@@ -99,34 +87,11 @@ public class BDSpeakerUtils {
         };
     }
 
-/*    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-        appId = Auth.getInstance(this).getAppId();
-        appKey = Auth.getInstance(this).getAppKey();
-        secretKey = Auth.getInstance(this).getSecretKey();
-//        sn = Auth.getInstance(this).getSn(); // 纯离线合成必须有此参数；离在线合成SDK没有此参数
-        desc = FileUtil.getResourceText(this, R.raw.mini_activity_description);
-//        setContentView(R.layout.activity_mini);
-//        initView();
-//        initPermission();
-        initTTs();
-    }*/
-
     /**
      * 注意此处为了说明流程，故意在UI线程中调用。
      * 实际集成中，该方法一定在新线程中调用，并且该线程不能结束。具体可以参考NonBlockSyntherizer的写法
      */
     public void initTTs() {
-        /*HandlerThread handlerThread = new HandlerThread("BDSpeaker-thread");
-        handlerThread.start();
-        Handler tHandler = new Handler(handlerThread.getLooper()){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
-
-            }
-        };*/
         new Thread(()->{
 
             LoggerProxy.printable(true); // 日志打印在logcat中
@@ -147,23 +112,6 @@ public class BDSpeakerUtils {
             result = mSpeechSynthesizer.setApiKey(appKey, secretKey);
             checkResult(result, "setApiKey");
 
-            // 4. 如果是纯离线SDK需要离线功能的话
-        /*if (!isOnlineSDK) {
-            // 文本模型文件路径 (离线引擎使用)， 注意TEXT_FILENAME必须存在并且可读
-            mSpeechSynthesizer.setParam(SpeechSynthesizer.PARAM_TTS_TEXT_MODEL_FILE, TEXT_FILENAME);
-            // 声学模型文件路径 (离线引擎使用)， 注意TEXT_FILENAME必须存在并且可读
-            mSpeechSynthesizer.setParam(SpeechSynthesizer.PARAM_TTS_SPEECH_MODEL_FILE, MODEL_FILENAME);
-
-            mSpeechSynthesizer.setParam(SpeechSynthesizer.PARAM_MIX_MODE, SpeechSynthesizer.MIX_MODE_DEFAULT);
-            // 该参数设置为TtsMode.MIX生效。
-            // MIX_MODE_DEFAULT 默认 ，wifi状态下使用在线，非wifi离线。在线状态下，请求超时6s自动转离线
-            // MIX_MODE_HIGH_SPEED_SYNTHESIZE_WIFI wifi状态下使用在线，非wifi离线。在线状态下， 请求超时1.2s自动转离线
-            // MIX_MODE_HIGH_SPEED_NETWORK ， 3G 4G wifi状态下使用在线，其它状态离线。在线状态下，请求超时1.2s自动转离线
-            // MIX_MODE_HIGH_SPEED_SYNTHESIZE, 2G 3G 4G wifi状态下使用在线，其它状态离线。在线状态下，请求超时1.2s自动转离线
-
-
-
-        }*/
 
             // 5. 以下setParam 参数选填。不填写则默认值生效
             // 设置在线发声音人： 0 普通女声（默认） 1 普通男声  3 情感男声<度逍遥> 4 情感儿童声<度丫丫>
@@ -175,37 +123,6 @@ public class BDSpeakerUtils {
             // 设置合成的语调，0-15 ，默认 5
             mSpeechSynthesizer.setParam(SpeechSynthesizer.PARAM_PITCH, "5");
 
-            // mSpeechSynthesizer.setAudioStreamType(AudioManager.MODE_IN_CALL); // 调整音频输出
-
-            // x. 额外 ： 自动so文件是否复制正确及上面设置的参数
-            /*Map<String, String> params = new HashMap<>();
-            // 复制下上面的 mSpeechSynthesizer.setParam参数
-            // 上线时请删除AutoCheck的调用
-            if (!isOnlineSDK) {
-                params.put(SpeechSynthesizer.PARAM_TTS_TEXT_MODEL_FILE, TEXT_FILENAME);
-                params.put(SpeechSynthesizer.PARAM_TTS_SPEECH_MODEL_FILE, MODEL_FILENAME);
-            }
-
-            // 检测参数，通过一次后可以去除，出问题再打开debug
-            InitConfig initConfig = new InitConfig(appId, appKey, secretKey, ttsMode, params, listener);
-            AutoCheck.getInstance(context).check(initConfig, new Handler() {
-                @Override
-                *//**
-                 * 开新线程检查，成功后回调
-                 *//*
-                public void handleMessage(Message msg) {
-                    if (msg.what == 100) {
-                        AutoCheck autoCheck = (AutoCheck) msg.obj;
-                        synchronized (autoCheck) {
-                            String message = autoCheck.obtainDebugMessage();
-                            print(message); // 可以用下面一行替代，在logcat中查看代码
-                            // Log.w("AutoCheckMessage", message);
-                        }
-                    }
-                }
-
-            });
-*/
             // 6. 初始化
             result = mSpeechSynthesizer.initTts(ttsMode);
             checkResult(result, "initTts");
