@@ -37,7 +37,7 @@ def insert_data():
             db.session.add(address)
         db.session.commit()
         print("插入成功")
-        return redirect(url_for('frontend.data_table'))
+        return render_template('data_table.html')
 
 
 # 显示数据表
