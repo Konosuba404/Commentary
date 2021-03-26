@@ -3,14 +3,14 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 {% import 'bootstrap/wtf.html' as wtf %}
 <nav>
-  <h1>Commentary</h1>
+  <h1>环境解说后台</h1>
   <ul>
     {% if g.user %}
       <li><span>{{ g.user['username'] }}</span>
-      <li><a href="{{ url_for('attest.logout') }}">Log Out</a>
+      <li><a href="{{ url_for('attest.logout') }}">退出</a>
     {% else %}
-      <li><a href="{{ url_for('attest.register') }}">Register</a>
-      <li><a href="{{ url_for('attest.login') }}">Log In</a>
+      <li><a href="{{ url_for('attest.register') }}">注册</a>
+      <li><a href="{{ url_for('attest.login') }}">登录</a>
     {% endif %}
   </ul>
 </nav>

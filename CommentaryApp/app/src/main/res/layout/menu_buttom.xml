@@ -13,7 +13,8 @@
         android:layout_above="@+id/menu_button"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="40dp"
-        android:layout_marginBottom="2dp">
+        android:layout_marginBottom="2dp"
+        tools:visibility="visible">
 
         <LinearLayout
             android:id="@+id/ll01"
@@ -89,7 +90,7 @@
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:gravity="right"
-                android:text="开始解说"
+                android:text="取消路径"
                 android:textColor="@android:color/black"
                 android:textSize="16sp" />
 
@@ -101,6 +102,35 @@
                 app:backgroundTint="@color/white"
                 app:fabSize="mini"
                 app:srcCompat="@android:drawable/ic_btn_speak_now" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/ll04"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/ll03"
+            android:orientation="horizontal"
+            tools:ignore="MissingConstraints">
+
+            <TextView
+                android:id="@+id/marker_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:text="方向景观"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/marker_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                app:backgroundTint="@color/white"
+                app:fabSize="mini"
+                app:srcCompat="@android:drawable/ic_menu_search" />
+
         </LinearLayout>
 
 

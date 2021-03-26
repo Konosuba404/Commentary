@@ -152,7 +152,7 @@
             document.getElementById('longitude').value = e.latlng.lng;
             document.getElementById('latitude').value = e.latlng.lat;
             alert('点击位置经纬度：' + e.latlng.lng + ',' + e.latlng.lat);#}
-            alert('点击位置经纬度：' + e.latlng.lng + typeof e.latlng.lng +',' + e.latlng.lat);
+            {#alert('点击位置经纬度：' + e.latlng.lng + typeof e.latlng.lng +',' + e.latlng.lat);#}
             {#addTh(e.latlng.lng.slice(0,9), e.latlng.lat.slice(0,7));#}
             // 创建点
             const marker = new BMapGL.Marker(new BMapGL.Point(e.latlng.lng, e.latlng.lat));

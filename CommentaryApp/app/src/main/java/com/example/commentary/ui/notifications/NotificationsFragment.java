@@ -61,6 +61,12 @@ public class NotificationsFragment extends Fragment {
         //初始化并注册适配器
         CustomAdapter customAdapter = new CustomAdapter(dataSet);
         recyclerView.setAdapter(customAdapter);
+
+        binding.imageButton.setOnClickListener(view -> {
+            getActivity().runOnUiThread(()->{
+
+            });
+        });
     }
 
     @Override

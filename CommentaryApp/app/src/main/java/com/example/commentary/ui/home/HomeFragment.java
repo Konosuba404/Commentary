@@ -23,6 +23,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 
 
+import com.baidu.location.BDLocation;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
@@ -44,10 +45,12 @@ import com.example.commentary.utils.DBUtils;
 import com.example.commentary.utils.GsonUtils;
 import com.example.commentary.utils.NetworkUtils;
 import com.example.commentary.utils.SensorUtils;
+import com.example.commentary.utils.WalkOverlayUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
@@ -59,24 +62,43 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
     SensorUtils sensorUtils;
     GsonUtils gsonUtils;
     private MapView mapView = null;
-    BaiduMap mBaiduMap;
+    static BaiduMap mBaiduMap;
     ArrayList<HashMap<String, Object>> data_list = new ArrayList<>();
     static Boolean FLAG = true;
+    static Boolean Marker_flag = true;
     BDSpeakerUtils bdSpeakerUtils;
     static String RequestSpeaker = "";
     static Bundle bundle;
     FragmentHomeBinding binding;
+    private static String str;
 
     //用于接收网络请求云端数据库中的结果
     public static Handler handler = new Handler(){
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
-            if (msg.what == 7){
+            if (msg.what == 7) {
                 bundle = msg.getData();
                 Log.i("yingyingying", "handleMessage: "+ bundle.get("inf").toString());
                 RequestSpeaker = bundle.get("inf").toString();
                 Log.e("yingyingying", "handleMessage: " + RequestSpeaker);
+            }else if (msg.what == 8 ) {
+                bundle = msg.getData();
+                if (bundle.get("marker_data").toString().equals("null")) {
+                    str = "没有数据";
+                }
+                if (bundle != null) {
+                    List<Map<String, String>> dataSet =  GsonUtils.listToString((String) bundle.get("marker_data"));
+                    if (dataSet.get(0).containsKey("inf")) {
+                        str = dataSet.get(0).get("inf");
+                    } else {
+                        batchMarkerFromNetWork(dataSet);
+                        str = "初始化成功";
+                    }
+                }
+
+                Log.e("yingyingying", "handleMessage: "+ str);
+                Log.i("yingyingying", "handleMessage: "+ bundle.get("marker_data").toString());
             }
         }
     };
@@ -104,6 +126,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         binding.includeXml.locationButton.setOnClickListener(this);
         binding.includeXml.speakButton.setOnClickListener(this);
         binding.includeXml.relocationButton.setOnClickListener(this);
+        binding.includeXml.markerButton.setOnClickListener(this);
 
         //初始化定位辅助类
         bdLocationUtils = new BDLocationUtils(getActivity(), mapView, mBaiduMap);
@@ -120,9 +143,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
             Bundle bundle2 = marker.getExtraInfo();
             String address = (String) bundle2.get("address");
             String description = (String) bundle2.get("description");
-            /*Log.e("now_position", "initView: " + Const.LATITUDE + "," + Const.LONGITUDE );
-            Log.e("marker", "initView: " + marker_position.toString() );*/
-            MyDialogFragment myDialogFragment = new MyDialogFragment(now_position, marker_position, address, description);
+            MyDialogFragment myDialogFragment = new MyDialogFragment(now_position, marker_position, address, description, mBaiduMap);
             myDialogFragment.show(getParentFragmentManager(), "dialog");
             return false;
         });
@@ -170,6 +191,33 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         }).start();
     }
 
+    //批量生成当前方向的Marker
+    public static void batchMarkerFromNetWork(List<Map<String, String>> dataSet){
+        new Thread(()->{
+
+            //创建OverlayOptions的集合
+            List<OverlayOptions> options = new ArrayList<OverlayOptions>();
+
+
+            BitmapDescriptor bitmap = BitmapDescriptorFactory
+                    .fromResource(R.drawable.icon_openmap_focuse_mark);
+
+            //遍历出数据库中传过来的经纬度，批量生成point和option，并添加到options中
+
+            dataSet.forEach(item -> {
+                float lat = Float.parseFloat(item.get("latitude"));
+                float lng = Float.parseFloat(item.get("longitude"));
+                LatLng point = new LatLng(lat, lng);
+                OverlayOptions option = new MarkerOptions()
+                        .position(point)
+                        .icon(bitmap);
+                options.add(option);
+            });
+            Log.e("options", "batchMarker: "+ options.size());
+            mBaiduMap.addOverlays(options);
+        }).start();
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -202,6 +250,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
         mapView.onDestroy();
         bdSpeakerUtils.onDestroy();
         bdLocationUtils.stopLocation();
+
     }
 
     @Override
@@ -242,6 +291,7 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                         Log.i("yingyingyingyingyingying", "initView: " + new NetworkUtils(gsonUtils.createJsonString()).toString());
                         //用于延迟等待消息被handler接收到
                         Thread.sleep(1000);
+                        //使用runOnUiThread()方法来更改UI
                         getActivity().runOnUiThread(()->{
                             Toast.makeText(getActivity(), RequestSpeaker, Toast.LENGTH_SHORT).show();
                             //创建通知栏管理工具
@@ -278,10 +328,14 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                 }).start();
                 break;
 
-            //用于请求百度语音
+            //清除路径规划，重新加载Mark点
             case R.id.speak_button:
-                //请求百度语音
-                bdSpeakerUtils.speak(RequestSpeaker);
+                //将对象释放掉，清空地图上的marker，重新加载并缩放
+//                WalkOverlayUtils.destory();
+                mBaiduMap.clear();
+                batchMarker();
+                MapStatusUpdate updateMapZoom = MapStatusUpdateFactory.zoomTo(19f);
+                mBaiduMap.animateMapStatus(updateMapZoom);
                 break;
 
             //用于重新定位
@@ -293,6 +347,38 @@ public class HomeFragment extends Fragment implements View.OnClickListener {
                 mBaiduMap.animateMapStatus(update);//animateMapStatus实现缩放功能
                 break;
 
+            //用于遍历出面前的景观用不同的marker标记出
+            case R.id.marker_button:
+                if (Marker_flag){
+                    new Thread(()->{
+                        try {
+                            String string = "纬度：" + Const.LATITUDE + "\n经度：" + Const.LONGITUDE + "\n方向：" + Const.DIRECTION;
+                            gsonUtils.createMap("Latitude", String.valueOf(Const.LATITUDE));
+                            gsonUtils.createMap("Longitude", String.valueOf(Const.LONGITUDE));
+                            gsonUtils.createMap("Direction", String.valueOf(Const.DIRECTION));
+                            gsonUtils.createMap("Flag", "marker");
+                            Log.i("yingyingyingyingyingying", "marker_dataSet: " + string);
+                            Log.i("MAP", "marker_dataSet: " + gsonUtils.map.toString());
+                            new NetworkUtils(gsonUtils.createJsonString(), getActivity()).postMarker();
+                            Log.i("yingyingyingyingyingying", "marker_dataSet: " + new NetworkUtils(gsonUtils.createJsonString()).toString());
+                            //用于延迟等待消息被handler接收到
+                            Thread.sleep(1000);
+                            getActivity().runOnUiThread(() -> {
+                                Toast.makeText(getActivity(), str, Toast.LENGTH_SHORT).show();
+                            });
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    Marker_flag = false;
+                } else {
+                    mBaiduMap.clear();
+                    batchMarker();
+                    MapStatusUpdate updateMapZoom1 = MapStatusUpdateFactory.zoomTo(19f);
+                    mBaiduMap.animateMapStatus(updateMapZoom1);
+                    Marker_flag = true;
+                }
+                break;
             default:
                 Log.e("悬浮按钮", "onClick: 操作失败");
         }

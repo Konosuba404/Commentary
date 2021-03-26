@@ -7,12 +7,12 @@ from sqlalchemy.sql import exists
 
 # 注册表单
 class RegisterForm(Form):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', [
+    username = StringField('用户名', validators=[DataRequired()])
+    password = PasswordField('密码', [
         validators.DataRequired(),
         validators.length(min=8, max=10, message='密码长度必须大于%(min)d且小于%(max)d')
     ])
-    RePassword = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='密码必须一致')])
+    RePassword = PasswordField('确认密码', validators=[DataRequired(), EqualTo('password', message='密码必须一致')])
     submit = SubmitField('注册')
 
     # 检验用户名是否存在
@@ -24,8 +24,8 @@ class RegisterForm(Form):
 
 # 登录表单
 class LoginForm(Form):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[
+    username = StringField('用户名', validators=[DataRequired()])
+    password = PasswordField('密码', validators=[
         DataRequired(),
         Length(min=8, max=10, message='密码长度必须大于%(min)d且小于%(max)d')])
     # recaptcha = RecaptchaField()

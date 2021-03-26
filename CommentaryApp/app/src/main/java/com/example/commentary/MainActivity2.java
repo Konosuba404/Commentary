@@ -8,6 +8,7 @@ import android.os.Bundle;
 
 import com.example.commentary.databinding.ActivityMain2Binding;
 import com.example.commentary.sqlDB.MyLoginis;
+import com.example.commentary.utils.WalkOverlayUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -52,4 +53,9 @@ public class MainActivity2 extends AppCompatActivity{
         new MyLoginis(preferences.getBoolean("statue", false), preferences.getString("username", "欢迎"));
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        WalkOverlayUtils.destory();
+    }
 }

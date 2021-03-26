@@ -49,6 +49,9 @@ public class MyLocationListener extends BDAbstractLocationListener {
         MyLocationData.Builder locationBuilder = new MyLocationData.Builder();
         locationBuilder.latitude(location.getLatitude());
         locationBuilder.longitude(location.getLongitude());
+        locationBuilder.accuracy(location.getRadius())
+                // 此处设置开发者获取到的方向信息，顺时针0-360
+                .direction(Const.DEGREE);
         MyLocationData locationData = locationBuilder.build();
         mBaiduMap.setMyLocationData(locationData);
     }

@@ -14,21 +14,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.commentary.databinding.ActivityMainBinding;
-import com.example.commentary.listener.MySensorListener;
 import com.example.commentary.sqlDB.MyDataBaseHelp;
 import com.example.commentary.sqlDB.MyTabOperate;
-import com.example.commentary.utils.BDLocationUtils;
-import com.example.commentary.utils.DBUtils;
-import com.example.commentary.utils.SensorUtils;
+import com.example.commentary.utils.GsonUtils;
+import com.example.commentary.utils.NetworkUtils;
 
 import java.lang.ref.SoftReference;
 import java.util.List;
@@ -46,6 +41,21 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
     ActivityMainBinding binding;
+/*    static Bundle bundle;
+    static String data;
+    GsonUtils gsonUtils;
+
+    public static Handler handlerUser = new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == 9) {
+                bundle = msg.getData();
+                Log.i("yingyingying", "handleMessage: "+ bundle.get("inf").toString());
+                data = bundle.get("inf").toString();
+            }
+        }
+    };*/
 
     //危险权限列表
     String[] permission = {Manifest.permission.ACCESS_FINE_LOCATION,
@@ -93,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         // 为按钮添加点击事件
         binding.login.setOnClickListener(this);
         binding.register.setOnClickListener(this);
+//        gsonUtils = new GsonUtils();
     }
 
 
@@ -102,14 +113,36 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             case R.id.login:
                 binding.loading.setVisibility(View.VISIBLE);
                 new Thread(()->{
-                    //使用软引用
-                    usernameSoft = new SoftReference(binding.username.getText().toString());
-                    password1Soft = new SoftReference(binding.password.getText().toString());
+                    /*try {
+                        //进行网络请求
+                        gsonUtils.createMap("username", binding.username.getText().toString());
+                        gsonUtils.createMap("password", binding.password.getText().toString());
+                        new NetworkUtils(gsonUtils.createJsonString()).postUser();
+                        Thread.sleep(1000);*/
+                        //使用软引用
+                        usernameSoft = new SoftReference(binding.username.getText().toString());
+                        password1Soft = new SoftReference(binding.password.getText().toString());
 
-                    //获取软引用中的实例
-                    username1 = (String)usernameSoft.get();
-                    password1 = (String)password1Soft.get();
+                        //获取软引用中的实例
+                        username1 = (String)usernameSoft.get();
+                        password1 = (String)password1Soft.get();
 
+                        /*runOnUiThread(()->{
+                            //判断data的类型
+                            if (data.equals("成功")){
+                                editor.putString("username", username1);
+                                editor.putBoolean("statue", true);
+                                editor.apply();
+                                Intent intent=new Intent(MainActivity.this,MainActivity2.class);
+                                startActivity(intent);
+                                finish();
+                            } else if (data.equals("用户不存在")) {
+                                Toast.makeText(this, data, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }*/
                     //用游标cursor来保存读取出来的数据
                     Cursor cursor=helper.getReadableDatabase().rawQuery("select * from User where username=?",new String[]{
                             username1
@@ -123,9 +156,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         if(password1.equals(password2)){
                             editor.putString("username", username1);
                             editor.putBoolean("statue", true);
-                            /*
+                            /**
                              * 登录成功
-                             * */
+                             */
                             editor.apply();
                             cursor.close();
                             Intent intent=new Intent(MainActivity.this,MainActivity2.class);

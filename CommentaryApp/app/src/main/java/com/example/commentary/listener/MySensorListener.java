@@ -15,6 +15,7 @@ public class MySensorListener implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ORIENTATION){
             int degree = (int)event.values[0];
+            Const.DEGREE = degree;
             if (degree >= 68 && degree <= 112){
                 Const.DIRECTION = "东：" + degree;
             }else if (degree >= 248 && degree <= 292){

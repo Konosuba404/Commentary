@@ -33,6 +33,8 @@ public class NetworkUtils {
     private Context context;
     public static final MediaType JSON = MediaType.Companion.parse("application/json; charset=utf-8");
 
+    public NetworkUtils(){}
+
     public NetworkUtils(String json) {
         setJson(json);
     }
@@ -101,4 +103,82 @@ public class NetworkUtils {
             Log.i("MSG", "线程结束");
         }).start();
     }
+
+    //网络请求获取marker的经纬度
+    public void postMarker(){
+        //创建一个OkHttpClient实例
+        OkHttpClient okHttpClient = new OkHttpClient();
+        //创建一个RequestBody对象
+        RequestBody body = RequestBody.Companion.create(json, JSON);
+        //创建一个Request对象
+        Request request = new Request.Builder()
+                .url("http://101.200.192.103:8080/network/process")
+                .post(body)
+                .build();
+        new Thread(()->{
+            try {
+                Log.i("MSG", "线程执行中");
+                Response response = okHttpClient.newCall(request).execute();
+                if (response.isSuccessful()){
+                    // response.body().string()只能调用一次
+                    String responseData = response.body().string();
+                    Log.i("yingyingying", "打印数据" + responseData);
+                    Message message = Message.obtain();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("marker_data", responseData);
+                    message.setData(bundle);
+                    message.what = 8;
+                    Looper.prepare();
+                    HomeFragment.handler.sendMessage(message);
+                    Looper.loop();
+                } else {
+                    Log.e("!!!ERROR!!!\n","<------ERROR------>");
+                }
+                if (response == null){
+                    Log.e("!!!ERROR!!!", "Response is null");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.i("MSG", "线程结束");
+        }).start();
+    }
+
+    /*public void postUser(){
+        //创建一个OkHttpClient实例
+        OkHttpClient okHttpClient = new OkHttpClient();
+        //创建一个RequestBody对象
+        RequestBody body = RequestBody.Companion.create(json, JSON);
+        //创建一个Request对象
+        Request request = new Request.Builder()
+                .url("http://101.200.192.103:8080/network/user")
+                .post(body)
+                .build();
+        new Thread(()->{
+            try {
+                Log.i("MSG", "线程执行中");
+                Response response = okHttpClient.newCall(request).execute();
+                if (response.isSuccessful()){
+                    // response.body().string()只能调用一次
+                    String responseData = response.body().string();
+                    Log.i("yingyingying", "打印数据" + responseData);
+                    Bundle bundle = new GsonUtils().createBundle(responseData);
+                    Message message = Message.obtain();
+                    message.setData(bundle);
+                    message.what = 9;
+                    Looper.prepare();
+                    MainActivity.handlerUser.sendMessage(message);
+                    Looper.loop();
+                } else {
+                    Log.e("!!!ERROR!!!\n","<------ERROR------>");
+                }
+                if (response == null){
+                    Log.e("!!!ERROR!!!", "Response is null");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.i("MSG", "线程结束");
+        }).start();
+    }*/
 }
