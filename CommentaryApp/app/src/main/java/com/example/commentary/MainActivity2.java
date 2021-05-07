@@ -4,10 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 
 
 import com.example.commentary.databinding.ActivityMain2Binding;
-import com.example.commentary.sqlDB.MyLoginis;
 import com.example.commentary.utils.WalkOverlayUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -16,6 +16,8 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+
+import java.util.Objects;
 
 
 public class MainActivity2 extends AppCompatActivity{
@@ -32,7 +34,7 @@ public class MainActivity2 extends AppCompatActivity{
         if(preferences.getBoolean("statue",false)){
             initView();
         }else{
-            Intent intent=new Intent(this, MainActivity2.class);
+            Intent intent=new Intent(this, MainActivity.class);
             startActivity(intent);
             finish();
         }
@@ -50,7 +52,12 @@ public class MainActivity2 extends AppCompatActivity{
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
-        new MyLoginis(preferences.getBoolean("statue", false), preferences.getString("username", "欢迎"));
+        if (Objects.equals(getIntent().getStringExtra("status"), "200")) {
+            //初始化服务
+            Intent intent = new Intent(this, DBIntentService.class);
+            startService(intent);
+            Log.e("------------Get Data------------", "initView: Success" );
+        }
     }
 
     @Override

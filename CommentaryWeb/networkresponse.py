@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify
+from werkzeug.security import generate_password_hash
 
 from models import Address, User
 from point_distance import select_describe
+from app import db
 
 bp = Blueprint('network', __name__, url_prefix='/network')
 
@@ -67,17 +69,15 @@ def process():
 @bp.route('/user', methods=('GET', 'POST'))
 def user():
     if request.method == 'POST':
-        jsonString = request.get_json()
+        data = request.get_json()
+        print(data)
         # 用户名
-        username = jsonString['username']
-        password = jsonString['password']
-        userdata = User.query.filter_by(username=username).all()
-        print(userdata)
-        if userdata is None:
-            response = dict()
-            response['inf'] = "用户不存在"
-            return jsonify(response)
-        elif userdata.password == password:
-            response = dict()
-            response['inf'] = "登录成功"
-            return jsonify(response)
+        username = data['username']
+        password = data['password']
+        print("username" + username)
+        print("password" + password)
+        # # 创建User对象
+        appUser = User(username=username, password=password)
+        db.session.add(appUser)
+        db.session.commit()
+        return jsonify("None")

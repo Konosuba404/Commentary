@@ -4,29 +4,28 @@ package com.example.commentary;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.example.commentary.databinding.ActivityMainBinding;
-import com.example.commentary.sqlDB.MyDataBaseHelp;
-import com.example.commentary.sqlDB.MyTabOperate;
-import com.example.commentary.utils.GsonUtils;
-import com.example.commentary.utils.NetworkUtils;
 
-import java.lang.ref.SoftReference;
+import com.example.commentary.sqlRoom.AppDatabase;
+import com.example.commentary.sqlRoom.User;
+import com.example.commentary.utils.DBUtils;
+
+import com.example.commentary.utils.SecurityUtils;
+
 import java.util.List;
+import java.util.Map;
 
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -34,28 +33,12 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks, View.OnClickListener {
 
-    private SQLiteOpenHelper helper = null;
-    private MyTabOperate mytab = null;
-    String username1,password1,password2;
-    SoftReference usernameSoft,password1Soft,password2Soft;
     SharedPreferences preferences;
     SharedPreferences.Editor editor;
     ActivityMainBinding binding;
-/*    static Bundle bundle;
-    static String data;
-    GsonUtils gsonUtils;
+    AppDatabase db;
 
-    public static Handler handlerUser = new Handler(){
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 9) {
-                bundle = msg.getData();
-                Log.i("yingyingying", "handleMessage: "+ bundle.get("inf").toString());
-                data = bundle.get("inf").toString();
-            }
-        }
-    };*/
+    static List<Map<String, Object>> mapList = null;
 
     //危险权限列表
     String[] permission = {Manifest.permission.ACCESS_FINE_LOCATION,
@@ -71,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        helper = new MyDataBaseHelp(this);
+//        helper = new MyDataBaseHelp(this);
         preferences = getSharedPreferences("login", Context.MODE_PRIVATE);
         editor = preferences.edit();
         if (EasyPermissions.hasPermissions(this, permission)){
@@ -103,7 +86,11 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         // 为按钮添加点击事件
         binding.login.setOnClickListener(this);
         binding.register.setOnClickListener(this);
-//        gsonUtils = new GsonUtils();
+        // 初始化Room
+        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "Commentary.db3").build();
+        // 启动异步，获取数据库中的值
+        AsyncUtils asyncUtils = new AsyncUtils();
+        asyncUtils.execute();
     }
 
 
@@ -113,79 +100,67 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             case R.id.login:
                 binding.loading.setVisibility(View.VISIBLE);
                 new Thread(()->{
-                    /*try {
-                        //进行网络请求
-                        gsonUtils.createMap("username", binding.username.getText().toString());
-                        gsonUtils.createMap("password", binding.password.getText().toString());
-                        new NetworkUtils(gsonUtils.createJsonString()).postUser();
-                        Thread.sleep(1000);*/
-                        //使用软引用
-                        usernameSoft = new SoftReference(binding.username.getText().toString());
-                        password1Soft = new SoftReference(binding.password.getText().toString());
-
-                        //获取软引用中的实例
-                        username1 = (String)usernameSoft.get();
-                        password1 = (String)password1Soft.get();
-
-                        /*runOnUiThread(()->{
-                            //判断data的类型
-                            if (data.equals("成功")){
-                                editor.putString("username", username1);
-                                editor.putBoolean("statue", true);
-                                editor.apply();
-                                Intent intent=new Intent(MainActivity.this,MainActivity2.class);
-                                startActivity(intent);
-                                finish();
-                            } else if (data.equals("用户不存在")) {
-                                Toast.makeText(this, data, Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }*/
-                    //用游标cursor来保存读取出来的数据
-                    Cursor cursor=helper.getReadableDatabase().rawQuery("select * from User where username=?",new String[]{
-                            username1
-                    });
-                    //判断cursor里面是否有数据，如果没有则说明账号不存在，如果有再判断密码正不正确
-                    if(cursor.getCount()!=0) {
-                        while(cursor.moveToNext()){
-                            password2Soft = new SoftReference(cursor.getString(cursor.getColumnIndex("password")));
-                            password2 = (String)password2Soft.get();
-                        }
-                        if(password1.equals(password2)){
-                            editor.putString("username", username1);
+                    if (!db.getUserDao().getAll().isEmpty()) {
+                        if (db.getUserDao().loadPasswordWhereUsername(binding.username.getText().toString()).equals(binding.password.getText().toString())) {
+                            editor.putString("username", binding.username.getText().toString());
                             editor.putBoolean("statue", true);
-                            /**
-                             * 登录成功
-                             */
                             editor.apply();
-                            cursor.close();
                             Intent intent=new Intent(MainActivity.this,MainActivity2.class);
+                            intent.putExtra("status", "200");
                             startActivity(intent);
                             finish();
-                        }else{
-                            runOnUiThread(()->{
-                                Toast.makeText(this,"密码错误",Toast.LENGTH_LONG).show();
-                                binding.password.setText("");
+                        } else {
+                            runOnUiThread(() -> {
+                                Toast.makeText(this, "密码错误", Toast.LENGTH_SHORT).show();
                             });
                         }
-                    }else if(cursor.getCount()==0){
-                        runOnUiThread(()->{
-                            Toast.makeText(this,"未注册",Toast.LENGTH_LONG).show();
+                    } else {
+                        mapList.forEach(item -> {
+                            if (item.get("username").equals(binding.username.getText().toString())) {
+                                if (item.get("password").equals(SecurityUtils.getResult(binding.password.getText().toString()))) {
+                                    editor.putString("username", binding.username.getText().toString());
+                                    editor.putBoolean("statue", true);
+                                    editor.apply();
+                                    // 将输入框中的值添加到本地缓存中
+                                    User user = new User();
+                                    user.username = binding.username.getText().toString();
+                                    user.password = binding.password.getText().toString();
+                                    db.getUserDao().insertAll(user);
+                                    Intent intent=new Intent(MainActivity.this,MainActivity2.class);
+                                    intent.putExtra("status", "200");
+                                    startActivity(intent);
+                                    finish();
+                                } else {
+                                    runOnUiThread(() -> {
+                                        Toast.makeText(this, "密码错误", Toast.LENGTH_SHORT).show();
+                                    });
+                                }
+                            } else {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(this, "当前用户未注册", Toast.LENGTH_SHORT).show();
+                                });
+                            }
                         });
                     }
-                    cursor.close();
                 }).start();
                 break;
             case R.id.register:
-                new Thread(()->{
-                    mytab = new MyTabOperate(helper.getWritableDatabase());
-                    mytab.insert(binding.username.getText().toString(), binding.password.getText().toString());
-                    runOnUiThread(()->{
-                        Toast.makeText(this,"注册成功",Toast.LENGTH_LONG).show();
+                new Thread(() -> {
+                    for (Map<String, Object> item : mapList) {
+                        if (item.get("username").equals(binding.username.getText().toString())) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(this,"当前用户存在",Toast.LENGTH_SHORT).show();
+                            });
+                            return;
+                        }
+                    }
+                    User user = new User();
+                    user.username = binding.username.getText().toString();
+                    user.password = binding.password.getText().toString();
+                    db.getUserDao().insertAll(user);
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "注册成功", Toast.LENGTH_SHORT).show();
                     });
-                    editor.clear();
                 }).start();
                 break;
         }
@@ -227,6 +202,20 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 Toast.makeText(this, "权限赋予成功", Toast.LENGTH_SHORT).show();
                 //执行Toast显示或者其他逻辑处理操作
                 break;
+        }
+    }
+
+    private static class AsyncUtils extends AsyncTask<Void, Void, List<Map<String, Object>>> {
+
+        @Override
+        protected List<Map<String, Object>> doInBackground(Void... voids) {
+            return DBUtils.loginUser();
+        }
+
+        @Override
+        protected void onPostExecute(List<Map<String, Object>> maps) {
+            super.onPostExecute(maps);
+            mapList = maps;
         }
     }
 }

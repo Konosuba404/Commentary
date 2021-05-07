@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.commentary">
+
     <!-- 这个权限用于进行网络定位 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- 这个权限用于访问GPS定位 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 用于访问wifi网络信息，wifi信息会用于进行网络定位 -->
@@ -25,11 +26,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Commentary">
+        <service
+            android:name=".DBIntentService"
+            android:exported="false"></service>
+
         <activity
             android:name=".MainActivity2"
             android:label="@string/title_activity_main2"
-            android:launchMode="singleTask">
-        </activity>
+            android:launchMode="singleTask"></activity>
 
         <meta-data
             android:name="com.google.android.actions"
@@ -43,16 +47,16 @@
             android:enabled="true"
             android:process=":remote" />
 
-        <activity android:name=".MainActivity"
+        <activity
+            android:name=".MainActivity"
             android:launchMode="singleTop">
-             <intent-filter>
-                 <action android:name="android.intent.action.MAIN" />
-                 <category android:name="android.intent.category.LAUNCHER" />
-             </intent-filter>
-        </activity>
-        <!--        语音测试类-->
-        <activity android:name=".MiniActivity">
-        </activity>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> <!-- 语音测试类 -->
+        <activity android:name=".MiniActivity"></activity>
     </application>
 
 </manifest>

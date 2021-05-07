@@ -10,6 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 链接数据库的工具类
@@ -70,51 +72,28 @@ public class DBUtils {
     }
 
     //查询用户是否在数据库中
-    public static String loginUser(String username, String password) {
+    public static List<Map<String, Object>> loginUser() {
+        List<Map<String, Object>> data_list = new ArrayList<>();
         Connection connection = getConn();
         try{
-            String sql = "select password from User where username=" + username;
+            String sql = "select * from User";
             if (connection != null){
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet resultSet = statement.executeQuery(sql);
-                if (resultSet != null && password.equals(resultSet.getString(1))){
-                    statement.close();
-                    connection.close();
-                    return "登录成功";
-                }else if (resultSet != null && !password.equals(resultSet.getString(1))){
-                    statement.close();
-                    connection.close();
-                    return "密码错误";
-                }else {
-                    sql = "insert into User VALUES " + username + ", " + password;
-                    statement.executeQuery(sql);
-                    statement.close();
-                    connection.close();
-                    return "注册成功";
+                while (resultSet.next()){
+                    Map<String, Object> data_map = new HashMap<>();
+                    data_map.put("username", resultSet.getString("username"));
+                    data_map.put("password", resultSet.getString("password"));
+                    data_list.add(data_map);
                 }
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return "异常";
-    }
-
-    //将新注册的用户写入数据库中
-    public static String registerUser(String username, String password) {
-        Connection connection = getConn();
-        try{
-            String sql = "insert into User VALUES " + username + ", " + password;
-            if (connection != null){
-                PreparedStatement statement = connection.prepareStatement(sql);
-                statement.executeQuery(sql);
                 statement.close();
                 connection.close();
-                return "注册成功";
-                }
-            } catch (SQLException e) {
-            e.printStackTrace();
+                return data_list;
+            }
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
         }
-        return "异常";
+        return null;
     }
 
 }

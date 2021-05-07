@@ -1,6 +1,7 @@
 package com.example.commentary.ui.notifications;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.commentary.MainActivity;
 import com.example.commentary.databinding.FragmentNotificationsBinding;
-import com.example.commentary.sqlDB.MyLoginis;
 import com.example.commentary.utils.CustomAdapter;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -36,15 +36,15 @@ public class NotificationsFragment extends Fragment {
 
     @SuppressLint("CommitPrefEdits")
     private void initView() {
+        preferences = getActivity().getSharedPreferences("login", MODE_PRIVATE);
         //根据在线情况显示是否在线
-        binding.login.setText(MyLoginis.getUsername());
-        if (MyLoginis.getStatue()){
+        binding.login.setText(preferences.getString("username","未登录"));
+        if (preferences.getBoolean("statue",false)){
             binding.myStatus.setText("在线");
         } else {
             binding.myStatus.setText("未在线");
         }
         binding.exit.setOnClickListener((view)->{
-            preferences = getActivity().getSharedPreferences("login", MODE_PRIVATE);
             editor = preferences.edit();
             editor.putBoolean("statue", false);
             editor.apply();
